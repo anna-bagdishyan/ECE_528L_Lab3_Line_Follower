@@ -21,8 +21,190 @@
  *
  */
 
+#include "msp.h"
+#include "inc/Clock.h"
+#include "inc/CortexM.h"
+#include "inc/GPIO.h"
+#include "inc/EUSCI_A0_UART.h"
+#include "inc/Motor.h"
+#include "inc/Timer_A1_Interrupt.h"
+#include "inc/SysTick_Interrupt.h"
+#include "inc/Reflectance_Sensor.h"
+
+// Initialize constant PWM duty cycle values for the motors
+#define PWM_NOMINAL 2500
+
+// Initialize a global variable for Timer A1 to keep track of elapsed time is milliseconds
+static uint32_t Timer_A1_ms_elapsed = 0;
+static uint8_t turn_around = 0;
+
+
+enum
+{
+    center = 0x18,
+    slightly_left_fc = 0x1C,
+    slightly_right_fc = 0x38,
+    far_left_fc = 0x01,
+    far_right_fc = 0x80,
+    left_turn = 0xF8,
+    right_turn = 0x1F,
+    t_intersection = 0xFF,
+    dead_end = 0x00
+} Line_Position;
+
+
+void Detect_Line_Position(uint8_t reflectance_sensor_data)
+{
+    if (turn_around == 1)
+    {
+        if (reflectance_sensor_data == center)
+        {
+            turn_around = 2;
+        }
+        else
+        {
+            Motor_Right(1500, 1500);
+            return;
+        }
+    }
+
+    switch(reflectance_sensor_data)
+    {
+        case center:
+        {
+            LED1_Output(RED_LED_OFF);
+            LED2_Output(RGB_LED_GREEN);
+            Motor_Forward(PWM_NOMINAL, PWM_NOMINAL);
+            break;
+
+        }
+        case slightly_left_fc:
+        {
+            LED1_Output(RED_LED_OFF);
+            LED2_Output(RGB_LED_YELLOW);
+            Motor_Forward(2000, PWM_NOMINAL);
+            break;
+
+        }
+        case slightly_right_fc:
+        {
+            LED1_Output(RED_LED_OFF);
+            LED2_Output(RGB_LED_PINK);
+            Motor_Forward(PWM_NOMINAL, 2000);
+            break;
+
+        }
+        case far_left_fc:
+        {
+            LED1_Output(RED_LED_OFF);
+            LED2_Output(RGB_LED_WHITE);
+            Motor_Left(2000,2000);
+            break;
+
+        }
+        case far_right_fc:
+        {
+            LED1_Output(RED_LED_OFF);
+            LED2_Output(RGB_LED_SKY_BLUE);
+            Motor_Right(2000,2000);
+            break;
+
+        }
+        case left_turn:
+        {
+            LED1_Output(RED_LED_ON);
+            LED2_Output(RGB_LED_WHITE);
+            Motor_Left(2000,2000);
+            break;
+
+        }
+        case right_turn:
+        {
+            LED1_Output(RED_LED_ON);
+            LED2_Output(RGB_LED_SKY_BLUE);
+            Motor_Right(2000,2000);
+            break;
+
+        }
+        case t_intersection:
+        {
+            LED1_Output(RED_LED_OFF);
+            LED2_Output(RGB_LED_BLUE);
+            if (turn_around == 0)
+            {
+                turn_around = 1;
+                Motor_Right(1500, 1500);
+            }
+            break;
+
+        }
+        case dead_end:
+        {
+            LED1_Output(RED_LED_OFF);
+            LED2_Output(RGB_LED_RED);
+            Motor_Stop();
+            break;
+
+        }
+        default:
+        {
+            LED1_Output(RED_LED_OFF);
+            LED2_Output(RGB_LED_OFF);
+            Motor_Stop();
+            break;
+        }
+    }
+}
+
+void Timer_A1_Periodic_Task(void)
+{
+    // Increment Timer_A1_ms_elapsed by 1 every time the Timer A1 periodic interrupt occurs
+    Timer_A1_ms_elapsed++;
+
+    // Start the process of reading the reflectance sensor array every 10 ms (i.e. 10, 20, 30, ...)
+    if ((Timer_A1_ms_elapsed % 10) == 0)
+    {
+        Reflectance_Sensor_Start();
+    }
+
+    // Finish reading the reflectance sensor sensor array after 1 ms (i.e. 11, 21, 31, ...)
+    if ((Timer_A1_ms_elapsed % 10) == 1)
+        {
+            uint8_t Reflectance_Sensor_Data = Reflectance_Sensor_End();
+            Detect_Line_Position(Reflectance_Sensor_Data);
+        }
+
+}
+
 int main(void)
 {
+    // Ensure that interrupts are disabled during initialization
+    DisableInterrupts();
+
+    // Initialize the 48 MHz Clock
+    Clock_Init48MHz();
+
+    // Initialize the built-in red LED and the RGB LED on the MSP432 microcontroller
+    LED1_Init();
+    LED2_Init();
+
+    // Initialize the EUSCI_A0_UART module
+    EUSCI_A0_UART_Init_Printf();
+
+    // Initialize the 8-channel QTRX Reflectance Sensor Array module
+    Reflectance_Sensor_Init();
+
+    // Initialize the SysTick timer to generate periodic interrupts every 1 ms
+    SysTick_Interrupt_Init(SYSTICK_INT_NUM_CLK_CYCLES, SYSTICK_INT_PRIORITY);
+
+    // Initialize Timer A1 periodic interrupts every 1 ms
+    Timer_A1_Interrupt_Init(&Timer_A1_Periodic_Task, TIMER_A1_INT_CCR0_VALUE);
+
+    // // Initialize the motors
+    Motor_Init();
+
+    // Enable the interrupts used by the modules
+    EnableInterrupts();
 
     while(1)
     {
