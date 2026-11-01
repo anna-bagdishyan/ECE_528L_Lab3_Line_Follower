@@ -82,7 +82,7 @@ void Detect_Line_Position(uint8_t reflectance_sensor_data)
         {
             LED1_Output(RED_LED_OFF);
             LED2_Output(RGB_LED_YELLOW);
-            Motor_Forward(2000, PWM_NOMINAL);
+            Motor_Forward(PWM_NOMINAL, 2000);
             break;
 
         }
@@ -90,7 +90,7 @@ void Detect_Line_Position(uint8_t reflectance_sensor_data)
         {
             LED1_Output(RED_LED_OFF);
             LED2_Output(RGB_LED_PINK);
-            Motor_Forward(PWM_NOMINAL, 2000);
+            Motor_Forward(2000, PWM_NOMINAL);
             break;
 
         }
@@ -98,7 +98,7 @@ void Detect_Line_Position(uint8_t reflectance_sensor_data)
         {
             LED1_Output(RED_LED_OFF);
             LED2_Output(RGB_LED_WHITE);
-            Motor_Left(2000,2000);
+            Motor_Right(2000,2000);
             break;
 
         }
@@ -106,7 +106,7 @@ void Detect_Line_Position(uint8_t reflectance_sensor_data)
         {
             LED1_Output(RED_LED_OFF);
             LED2_Output(RGB_LED_SKY_BLUE);
-            Motor_Right(2000,2000);
+            Motor_Left(2000,2000);
             break;
 
         }
@@ -130,11 +130,7 @@ void Detect_Line_Position(uint8_t reflectance_sensor_data)
         {
             LED1_Output(RED_LED_OFF);
             LED2_Output(RGB_LED_BLUE);
-            if (turn_around == 0)
-            {
-                turn_around = 1;
-                Motor_Right(1500, 1500);
-            }
+             Motor_Right(4500, 4500);
             break;
 
         }
