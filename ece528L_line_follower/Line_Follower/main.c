@@ -36,8 +36,11 @@
 
 // Initialize a global variable for Timer A1 to keep track of elapsed time is milliseconds
 static uint32_t Timer_A1_ms_elapsed = 0;
-static uint8_t turn_around = 0;
 
+
+static uint32_t Timer_elapsed = 0;
+
+static uint8_t turn_around = 0;
 
 enum
 {
@@ -52,104 +55,93 @@ enum
     dead_end = 0x00
 } Line_Position;
 
-
 void Detect_Line_Position(uint8_t reflectance_sensor_data)
 {
-    if (turn_around == 1)
+
+    if (reflectance_sensor_data != dead_end)
     {
-        if (reflectance_sensor_data == center)
-        {
-            turn_around = 2;
-        }
-        else
-        {
-            Motor_Right(1500, 1500);
-            return;
-        }
+        Timer_elapsed = 0;
     }
 
     switch(reflectance_sensor_data)
-    {
-        case center:
         {
-            LED1_Output(RED_LED_OFF);
-            LED2_Output(RGB_LED_GREEN);
-            Motor_Forward(PWM_NOMINAL, PWM_NOMINAL);
-            break;
+            case center:
+            {
+                LED1_Output(RED_LED_OFF);
+                LED2_Output(RGB_LED_GREEN);
+                Motor_Forward(PWM_NOMINAL, PWM_NOMINAL);
+                break;
+            }
+            case slightly_left_fc:
+            {
+                LED1_Output(RED_LED_OFF);
+                LED2_Output(RGB_LED_YELLOW);
+                Motor_Forward(PWM_NOMINAL, 1700);
+                break;
+            }
+            case slightly_right_fc:
+            {
+                LED1_Output(RED_LED_OFF);
+                LED2_Output(RGB_LED_PINK);
+                Motor_Forward(1700, PWM_NOMINAL);
+                break;
+            }
+            case far_left_fc:
+            {
+                LED1_Output(RED_LED_OFF);
+                LED2_Output(RGB_LED_WHITE);
+                Motor_Right(1700,1700);
+                break;
+            }
+            case far_right_fc:
+            {
+                LED1_Output(RED_LED_OFF);
+                LED2_Output(RGB_LED_SKY_BLUE);
+                Motor_Left(1700,1700);
+                break;
+            }
+            case left_turn:
+            {
+                LED1_Output(RED_LED_ON);
+                LED2_Output(RGB_LED_WHITE);
+                Motor_Left(1000,2000);
+                break;
+            }
+            case right_turn:
+            {
+                LED1_Output(RED_LED_ON);
+                LED2_Output(RGB_LED_SKY_BLUE);
+                Motor_Right(2000, 1000);
+                break;
+            }
+            case t_intersection:
+            {
+                LED1_Output(RED_LED_OFF);
+                LED2_Output(RGB_LED_BLUE);
+                Motor_Right(PWM_NOMINAL, PWM_NOMINAL);
+                break;
+            }
+            case dead_end:
+            {
+                LED1_Output(RED_LED_OFF);
+                LED2_Output(RGB_LED_RED);
 
-        }
-        case slightly_left_fc:
-        {
-            LED1_Output(RED_LED_OFF);
-            LED2_Output(RGB_LED_YELLOW);
-            Motor_Forward(PWM_NOMINAL, 2000);
-            break;
+                Timer_elapsed++;
 
-        }
-        case slightly_right_fc:
-        {
-            LED1_Output(RED_LED_OFF);
-            LED2_Output(RGB_LED_PINK);
-            Motor_Forward(2000, PWM_NOMINAL);
-            break;
+                if (Timer_elapsed >= 150)
+                {
+                    Motor_Stop();
+                }
 
+                break;
+            }
+            default:
+            {
+                LED1_Output(RED_LED_OFF);
+                LED2_Output(RGB_LED_OFF);
+                break;
+            }
         }
-        case far_left_fc:
-        {
-            LED1_Output(RED_LED_OFF);
-            LED2_Output(RGB_LED_WHITE);
-            Motor_Right(2000,2000);
-            break;
-
-        }
-        case far_right_fc:
-        {
-            LED1_Output(RED_LED_OFF);
-            LED2_Output(RGB_LED_SKY_BLUE);
-            Motor_Left(2000,2000);
-            break;
-
-        }
-        case left_turn:
-        {
-            LED1_Output(RED_LED_ON);
-            LED2_Output(RGB_LED_WHITE);
-            Motor_Left(2000,2000);
-            break;
-
-        }
-        case right_turn:
-        {
-            LED1_Output(RED_LED_ON);
-            LED2_Output(RGB_LED_SKY_BLUE);
-            Motor_Right(2000,2000);
-            break;
-
-        }
-        case t_intersection:
-        {
-            LED1_Output(RED_LED_OFF);
-            LED2_Output(RGB_LED_BLUE);
-             Motor_Right(4500, 4500);
-            break;
-
-        }
-        case dead_end:
-        {
-            LED1_Output(RED_LED_OFF);
-            LED2_Output(RGB_LED_RED);
-            Motor_Stop();
-            break;
-
-        }
-        default:
-        {
-            LED1_Output(RED_LED_OFF);
-            LED2_Output(RGB_LED_OFF);
-            Motor_Stop();
-            break;
-        }
-    }
 }
 
 void Timer_A1_Periodic_Task(void)
