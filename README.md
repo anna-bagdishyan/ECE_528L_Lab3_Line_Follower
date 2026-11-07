@@ -19,6 +19,7 @@ The Line Follower lab interfaces with the following:
 | USB-A to Micro-USB Cable  | 1 | N/A
 | TI-RSLK MAX Chassis   | 1 | Pololu
 | 8-Channel QTRX Sensor Array  | 1 | Pololu
+| Black Tape (1-inch or 3/4-inch) | 1 | N/A
 
 ## Prelab
 1. ```c
@@ -50,16 +51,21 @@ The Line Follower lab interfaces with the following:
 
 ## Analysis and Results  
 ### Task 1  
+The Detect_Line_Position function was updated to control the robot's movement based on the reflectance sensor reading. Motor command were used to move the robot forward when centered, adjust the motor speeds when slightly off center, and turn when detecting far right, far left, left turn, and right turn positions. The robot turns right when a T-intersection is detected. A counter was added to stop the motors after approximately 1.5 seconds, and resets whenever another sensor value is detected. The function is called from the Timer_A1_Periodic_Task function after each sensor reading.  
 
 ## Known Issues or Limitations  
-There are no known current issues or limitations.  
+During left turns, the reflectance sensor would briefly detect a dead end, which would cause the robot to stop. This issue did not occur during right turns. To accommodate for this, a counter was added so the motors stop only after 150 consecutive dead end readings, around 1.5 seconds. This allowed the robot to complete left turns without stopping prematurely.
 
 ## Author Contribution  
 Anna  
-- 
+- Pre-lab
+- Wrote "Known Issues or Limitations"
+- Wrote Task 1 in "Analysis and Results"
+- Task 1
 
 Mario  
-- 
+- Task 1
+- Wrote the Overview
   
 ## References
 ECE 528/L Lab 3 - Line Follower.
