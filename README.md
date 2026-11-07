@@ -11,6 +11,7 @@ The Line Follower lab interfaces with the following:
 * 8-Channel QTRX Sensor Array - [Product Link](https://www.pololu.com/product/3672)
 
 ## Overview
+This lab utilizes the 8-Channel QTRX Reflectance Sensor Array to allow the TI-RSLK MAX Chassis to follow a black tape line maze. The sensors detect the robot's position relative to the black line and provide readings that are used to identify different maze situations, including center, slightly left or right, far left or right, turns, T-intersections, and dead ends. A finite state machine is implemented to control the robot's movement based on these situations, which allows the robot to navigate the line maze.
 
 ## Components Used
 | Components Used | Quantity    | Manufacturer 
